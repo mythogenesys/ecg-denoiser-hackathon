@@ -1,0 +1,14 @@
+# Core AI and Data Handling
+torch
+numpy
+scipy
+pandas
+
+# Data Visualization
+matplotlib
+
+# PhysioNet Database Interaction
+wfdb
+
+# Web Application
+streamlit

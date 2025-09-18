@@ -1,0 +1,10 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Data (if too large for Git)
+data/
+
+# OS-specific
+.DS_Store
