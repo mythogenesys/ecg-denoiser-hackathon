@@ -49,7 +49,7 @@ def get_noise_signals(noise_data_path, target_fs):
             noises[noise_types[noise_code]] = noise_signal
     return noises
 
-def create_noisy_clean_pair(clean_signal, noise_signals, segment_length, target_fs, snr_db):
+def create_noisy_clean_pair(clean_signal, noise_signals, segment_samples, snr_db):
     """
     Creates a pair of (noisy_segment, clean_segment) for training.
     
@@ -63,7 +63,6 @@ def create_noisy_clean_pair(clean_signal, noise_signals, segment_length, target_
     Returns:
         (np.array, np.array): A tuple of (noisy_segment, clean_segment).
     """
-    segment_samples = segment_length * target_fs
 
     # 1. Select a random segment from the clean ECG
     if len(clean_signal) < segment_samples:

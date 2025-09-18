@@ -29,8 +29,8 @@ class Config:
     NUM_WORKERS = 2
     
     # Data Generation Parameters
-    SEGMENT_LENGTH_S = 8 # Seconds
-    SEGMENT_LENGTH_SAMPLES = int(SEGMENT_LENGTH_S * TARGET_FS)
+    SEGMENT_LENGTH_SAMPLES = 2048 # Seconds
+    SEGMENT_LENGTH_S = int(SEGMENT_LENGTH_SAMPLES / TARGET_FS)
     SNR_DB_MIN = -3
     SNR_DB_MAX = 12
 
@@ -115,8 +115,7 @@ class PhysioNetDataset(Dataset):
             noisy_segment, clean_segment = create_noisy_clean_pair(
                 clean_signal=clean_signal,
                 noise_signals=self.noise_signals,
-                segment_length=self.config.SEGMENT_LENGTH_S,
-                target_fs=TARGET_FS,
+                segment_samples=self.config.SEGMENT_LENGTH_SAMPLES, # <-- Pass samples directly
                 snr_db=snr_db
             )
 
