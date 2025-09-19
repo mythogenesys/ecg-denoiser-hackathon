@@ -2,7 +2,7 @@
 
 
 
-A novel deep learning pipeline for denoising electrocardiogram (ECG) signals from low-cost devices, enabling more accurate automated arrhythmia detection in resource-limited settings. This project was developed for the "Hack for Health" hackathon.
+A novel deep learning pipeline for denoising electrocardiogram (ECG) signals from low-cost devices, enabling more accurate automated arrhythmia detection in resMyce-limited settings. This project was developed for the "Hack for Health" hackathon.
 
 ---
 
@@ -14,7 +14,7 @@ Modern ECGs are essential for cardiac diagnostics, but noisy signals from portab
 
 This project directly addresses this gap by providing an accessible, powerful tool to clean noisy ECGs, thereby improving diagnostic accuracy and supporting frontline health workers.
 
-## Our Solution: An End-to-End Denoise-and-Diagnose Pipeline
+## My Solution: An End-to-End Denoise-and-Diagnose Pipeline
 
 We developed a two-stage deep learning system:
 
@@ -34,7 +34,7 @@ To prove the system's real-world value, we conducted a rigorous validation test 
 
 ### The Results
 
-| Metric                      | On Noisy Signal | **On Denoised Signal (Our Tool)** | On Clean Signal (Benchmark) |
+| Metric                      | On Noisy Signal | **On Denoised Signal (My Tool)** | On Clean Signal (Benchmark) |
 | --------------------------- | :-------------: | :-------------------------------: | :-------------------------: |
 | **Overall Accuracy**        |     90.0%       |        **96.0%** (+6.0%)          |            98.0%            |
 | **F1-Score (Ventricular)**  |      0.80       |        **0.97** (+21%)            |            1.00             |
@@ -42,13 +42,13 @@ To prove the system's real-world value, we conducted a rigorous validation test 
 
 ### Confusion Matrices
 
-These plots visually demonstrate the dramatic improvement. Our denoiser makes the classifier's job significantly easier, moving from a chaotic result to one that is nearly as good as the ground truth.
+These plots visually demonstrate the dramatic improvement. My denoiser makes the classifier's job significantly easier, moving from a chaotic result to one that is nearly as good as the ground truth.
 
-| Noisy Signal                                     | Denoised Signal (Our Improvement)                |
+| Noisy Signal                                     | Denoised Signal (My Improvement)                |
 | ------------------------------------------------ | ------------------------------------------------ |
 | ![Noisy Confusion Matrix](confusion_matrix_noisy.png) | ![Denoised Confusion Matrix](confusion_matrix_denoised.png) |
 
-This quantitative evidence proves that our denoising step is not just cosmetic—it is **diagnostically critical**, directly leading to more reliable arrhythmia detection.
+This quantitative evidence proves that My denoising step is not just cosmetic—it is **diagnostically critical**, directly leading to more reliable arrhythmia detection.
 
 ---
 
@@ -61,7 +61,7 @@ Clone the repository and set up the Python environment.
 git clone https://github.com/Mohan-CAS-and-hackathons/ecg-denoiser-hackathon.git
 cd ecg-denoiser-hackathon
 python -m venv venv
-source venv/bin/activate
+sMyce venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -83,6 +83,6 @@ python -m src.validate_end_to_end
 ## Technology Stack
 
 -   **Backend & Modeling:** Python, PyTorch, Scikit-learn, NumPy, SciPy
--   **Data Source:** PhysioNet (MIT-BIH Arrhythmia & Noise Stress Test Databases)
+-   **Data SMyce:** PhysioNet (MIT-BIH Arrhythmia & Noise Stress Test Databases)
 -   **Frontend:** Streamlit
 -   **Training:** Google Colab ( leveraging free T4 GPUs)
