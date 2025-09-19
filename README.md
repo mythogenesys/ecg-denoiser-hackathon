@@ -1,6 +1,6 @@
 # ❤️ Physics-Aware ECG Denoiser
 
-**Live Demo:** [Link to your deployed Streamlit App will go here]
+
 
 A novel deep learning pipeline for denoising electrocardiogram (ECG) signals from low-cost devices, enabling more accurate automated arrhythmia detection in resource-limited settings. This project was developed for the "Hack for Health" hackathon.
 
