@@ -18,8 +18,8 @@ from .classifier_model import ECGClassifier
 VALIDATION_RECORD_NAME = '201' 
 NOISE_SNR_DB = 0 # Add a very high level of noise to stress-test the system
 
-DENOISER_MODEL_PATH = 'ecg_denoiser_model.pth'
-CLASSIFIER_MODEL_PATH = 'ecg_classifier_model.pth'
+DENOISER_MODEL_PATH = 'models/ecg_denoiser_model.pth'
+CLASSIFIER_MODEL_PATH = 'models/ecg_classifier_model.pth'
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # --- Main Validation Logic ---
@@ -119,7 +119,7 @@ def main():
         disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
         disp.plot(cmap=plt.cm.Blues)
         disp.ax_.set_title(f'Confusion Matrix - {name} Signal')
-        plt.savefig(f'confusion_matrix_{name.lower()}.png')
+        plt.savefig(f'results/confusion_matrix_{name.lower()}.png')
     
     print("\n✅ Validation complete. Check the classification reports and saved confusion matrix plots.")
 

@@ -15,7 +15,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 128
 LEARNING_RATE = 1e-3
 NUM_EPOCHS = 20 # Classification trains much faster
-MODEL_SAVE_PATH = 'ecg_classifier_model.pth'
+MODEL_SAVE_PATH = 'models/ecg_classifier_model.pth'
 
 def main():
     print("--- Training ECG Beat Classifier ---")

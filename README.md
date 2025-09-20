@@ -46,7 +46,7 @@ These plots visually demonstrate the dramatic improvement. My denoiser makes the
 
 | Noisy Signal                                     | Denoised Signal (My Improvement)                |
 | ------------------------------------------------ | ------------------------------------------------ |
-| ![Noisy Confusion Matrix](confusion_matrix_noisy.png) | ![Denoised Confusion Matrix](confusion_matrix_denoised.png) |
+| ![Noisy Confusion Matrix](results/confusion_matrix_noisy.png) | ![Denoised Confusion Matrix](results/confusion_matrix_denoised.png) |
 
 This quantitative evidence proves that My denoising step is not just cosmetic—it is **diagnostically critical**, directly leading to more reliable arrhythmia detection.
 

@@ -5,6 +5,7 @@ from scipy.signal import find_peaks
 import plotly.graph_objects as go
 import time
 from PIL import Image
+import torch
 
 # Import our inference tools
 from src.inference import load_model, denoise_ecg_signal, DEVICE
@@ -21,13 +22,13 @@ st.set_page_config(
 @st.cache_resource
 def get_models():
     """Load and cache both models."""
-    denoiser = load_model('ecg_denoiser_model.pth', DEVICE)
+    denoiser = load_model('models/ecg_denoiser_model.pth', DEVICE)
     classifier = None # Placeholder for the classifier model
     # Add try-except for robustness in case the file is missing
     try:
         from src.classifier_model import ECGClassifier
         classifier_model = ECGClassifier(num_classes=5)
-        classifier_model.load_state_dict(torch.load('ecg_classifier_model.pth', map_location=DEVICE))
+        classifier_model.load_state_dict(torch.load('models/ecg_classifier_model.pth', map_location=DEVICE))
         classifier_model.to(DEVICE)
         classifier_model.eval()
         classifier = classifier_model
@@ -102,7 +103,7 @@ with tab1:
         )
         
         try:
-            with open("sample_noisy_ecg.csv", "rb") as file:
+            with open("samples/sample_noisy_ecg.csv", "rb") as file:
                 st.download_button(
                     label="Download Sample ECG (.csv)",
                     data=file,
@@ -227,9 +228,9 @@ with tab3:
     try:
         col1, col2 = st.columns(2)
         with col1:
-            st.image(Image.open('confusion_matrix_noisy.png'), caption="Confusion Matrix on Noisy Data")
+            st.image(Image.open('results/confusion_matrix_noisy.png'), caption="Confusion Matrix on Noisy Data")
         with col2:
-            st.image(Image.open('confusion_matrix_denoised.png'), caption="Confusion Matrix on Denoised Data")
+            st.image(Image.open('results/confusion_matrix_denoised.png'), caption="Confusion Matrix on Denoised Data")
     except FileNotFoundError:
         st.warning("Validation images not found. Please run 'src/validate_end_to_end.py' to generate them.")
 
