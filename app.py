@@ -92,7 +92,7 @@ with tab1:
     st.header("Transform Your Noisy ECG in Seconds")
 
     with st.sidebar:
-        st.image("https://storage.googleapis.com/maker-blog-assets/ecg-header.png", use_container_width=True) # A nice header image
+        st.image("assets/header_image.png", use_container_width=True) # A nice header image
         st.title("Get Started")
         st.markdown(
             """
