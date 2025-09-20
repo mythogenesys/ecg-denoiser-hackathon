@@ -16,3 +16,5 @@ wfdb   # <-- REMOVE ==4.1.2
 streamlit
 
 scikit-learn
+
+plotly
