@@ -74,7 +74,7 @@ The confusion matrices in Figure 1 provide a powerful visual of this improvement
 *<p align="center">Figure 1: Confusion matrices I generated for the arrhythmia classifier on (a) the noisy signal, (b) my denoised signal, and (c) the clean ground-truth signal.</p>*
 | (a) Noisy Signal | (b) My Denoised Signal | (c) Clean Signal |
 | :---: | :---: | :---: |
-| ![Noisy](results/confusion_matrix_noisy.png) | ![Denoised](results/confusion_matrix_denoised.png) | ![Clean](results/confusion_matrix_clean (ground truth).png) |
+| ![Noisy](results/confusion_matrix_noisy.png) | ![Denoised](results/confusion_matrix_denoised.png) | ![Clean](results/confusion_matrix_cleanGT.png) |
 
 ---
 
