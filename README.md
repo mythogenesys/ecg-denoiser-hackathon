@@ -1,4 +1,4 @@
-# ❤️ Physics-Aware ECG Denoiser
+# Physics-Aware ECG Denoiser
 
 
 
