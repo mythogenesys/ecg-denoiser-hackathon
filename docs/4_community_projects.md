@@ -1,7 +1,20 @@
-# Ideas for Your Own Project!
-Now that you have this toolkit, what can you build? Here are some ideas to get you started:
+# Community Projects
 
--   **Heart Rate Variability (HRV) Tracker:** Use the R-peak detection from our tutorials to measure the tiny variations in time between heartbeats. This is a great indicator of stress and recovery!
--   **Sleep Apnea Detector:** People with sleep apnea sometimes have changes in their heart rate while they sleep. Can you write a script to detect these patterns in a long ECG recording?
--   **Different Noise Types:** Our denoiser was trained on three types of noise. Can you find or create other types of noise (like from a broken wire) and see if you can retrain the model to remove them?
--   **Mobile App Integration:** Can you build a simple mobile app that uses this model to analyze an ECG signal from a Bluetooth heart rate monitor?
+I don’t want this to stay just my project — here’s how you can join in:
+
+1. **Try It Out**  
+   - Clone this repo.  
+   - Run `app.py` with a sample ECG.  
+   - See the noisy → clean transformation in real time.  
+
+2. **Tweak the Models**  
+   - Play with training in `notebooks/ECG_Denoiser_Training.ipynb`.  
+   - Add your own loss term or try a new architecture.  
+
+3. **Contribute Datasets**  
+   - Have smartwatch or portable ECG data? Add it to the `data/` folder.  
+   - Let’s make the system more robust to new noise types.  
+
+![Community](img/community.png)
+
+This is meant to be a **living project**. Your small changes can help make ECG diagnostics more reliable everywhere!

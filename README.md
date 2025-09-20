@@ -67,7 +67,8 @@ pip install -r requirements.txt
 
 ### 2. Run the Web App
 
-Launch the Streamlit application locally. The trained models are included in the repository.```bash
+Launch the Streamlit application locally. The trained models are included in the repository.
+```bash
 streamlit run app.py
 ```
 The app allows you to download a sample noisy ECG and upload it to see the denoising and classification in action.

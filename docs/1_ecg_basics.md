@@ -1,12 +1,19 @@
-# What is an ECG? A Beginner's Guide
-An electrocardiogram (ECG or EKG) is a simple test that records the electrical activity of your heart. Think of it as a picture of your heartbeat's rhythm. A healthy heartbeat has a very specific, repeating pattern.
+# ECG Basics 
 
-### The Three Main Parts of a Heartbeat
+Hi, I’m Mohanarangan, and here’s a quick crash course in ECGs.  
 
-![ECG Waveform](https://i.imgur.com/8xS7s9U.png)
+An **ECG (electrocardiogram)** is a recording of your heart’s electrical activity.  
+It’s usually shown as a squiggly line that repeats with every heartbeat.  
 
-1.  **P-Wave:** The first small bump. It represents the electrical signal that causes the atria (the top chambers of the heart) to contract.
-2.  **QRS Complex:** The big, sharp spike in the middle. This is the most powerful signal, representing the contraction of the ventricles (the bottom chambers) that pump blood to the rest of the body.
-3.  **T-Wave:** The final, broader bump. This represents the "reset" phase, as the ventricles prepare for the next beat.
+The key parts are:
+- **P wave** → atria contracting  
+- **QRS complex** → ventricles contracting (the sharp spike!)  
+- **T wave** → heart resetting  
 
-Doctors can diagnose many heart conditions just by looking at the shape, timing, and rhythm of these three parts.
+Doctors look at the shape and timing of these waves to spot heart problems.
+
+![ECG Basics](img/ecg_basics.png)
+
+Why does this matter?  
+Because if the signal is noisy or distorted, you could miss a life-threatening arrhythmia.  
+That’s where my AI comes in 
