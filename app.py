@@ -184,7 +184,7 @@ with tab2:
     st.header("Our Solution: A Physics-Aware AI Pipeline")
     st.markdown(
         """
-        To address this, we built a novel end-to-end deep learning pipeline that doesn't just "clean" the signal, but does so in a way that respects the underlying physics of the heart.
+        To address this, I built a novel end-to-end deep learning pipeline that doesn't just "clean" the signal, but does so in a way that respects the underlying physics of the heart.
 
         **1. The Denoiser:**
         A **1D U-Net** architecture takes the noisy signal and reconstructs a clean version. What makes it unique is our custom **physics-informed loss function**, which teaches the model not just to remove noise, but to preserve the essential diagnostic features of a real heartbeat:
@@ -203,11 +203,11 @@ with tab3:
     st.header("Proof of Impact: A Real-World Simulation")
     st.markdown(
         """
-        To prove our system works, we conducted a rigorous test. We took a patient record from the MIT-BIH database that the AI had **never seen during training**. We then digitally added a severe level of noise to simulate a worst-case, low-quality recording (0 dB SNR). Finally, we ran this challenging signal through our full pipeline and measured the diagnostic accuracy.
+        To prove our system works, Iconducted a rigorous test. Itook a patient record from the MIT-BIH database that the AI had **never seen during training**. Ithen digitally added a severe level of noise to simulate a worst-case, low-quality recording (0 dB SNR). Finally, Iran this challenging signal through our full pipeline and measured the diagnostic accuracy.
         """
     )
     st.subheader("The Results: From Chaos to Clarity")
-    st.markdown("The improvement in diagnostic accuracy is dramatic. We measured the F1-score, a key metric for classification performance:")
+    st.markdown("The improvement in diagnostic accuracy is dramatic. Imeasured the F1-score, a key metric for classification performance:")
     
     result_data = {
         'Metric': ['Overall Accuracy', 'F1-Score (Ventricular Beats)', 'F1-Score (Supraventricular Beats)'],
