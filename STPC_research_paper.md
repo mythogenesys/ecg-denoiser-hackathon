@@ -226,7 +226,8 @@ def stpc_loss(x, x_hat, lam_amp=1.0, lam_grad=0.1, lam_spec=0.05):
 
     # Combine the losses
     total_loss = lam_amp * amp_loss + lam_grad * grad_loss + lam_spec * spec_loss
-    return total_loss```
+    return total_loss
+```
 
 ---
 
