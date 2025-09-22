@@ -17,7 +17,7 @@ from data_utils import get_all_record_names, load_and_resample_signal, get_noise
 class Config:
     # Paths (adjust for Google Colab)
     # Assumes you mount your drive at /content/drive
-    DRIVE_PATH = '/content/drive/MyDrive/ecg_denoising_project/' # Adjusted path for clarity
+    DRIVE_PATH = '/content/drive/MyDrive/ecg_denoiser_hackathon/' # Adjusted path for clarity
     CLEAN_ECG_DATA_PATH = os.path.join(DRIVE_PATH, 'data/mit-bih-arrhythmia-database-1.0.0/')
     NOISE_DATA_PATH = os.path.join(DRIVE_PATH, 'data/mit-bih-noise-stress-test-database-1.0.0/')
     MODEL_SAVE_PATH = os.path.join(DRIVE_PATH, 'models/ecg_denoiser_stpc_full.pth') # Default save path
