@@ -7,6 +7,16 @@ from PIL import Image
 import torch
 from collections import Counter
 import os
+import sys
+
+# ==============================================================================
+# SYSTEM SETUP: This is the definitive fix for Streamlit Cloud deployment.
+# This block adds the project's root directory to Python's path.
+# ==============================================================================
+project_root = os.path.dirname(os.path.abspath(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+# ==============================================================================
 
 # --- Import our project's source code ---
 from src.inference import denoise_ecg_signal, DEVICE
@@ -129,7 +139,7 @@ with tab1:
         try:
             noisy_signal_np = pd.read_csv(uploaded_file, header=None)[0].to_numpy()
             
-            # Pad or truncate to the model's required input size (2048)
+            # Pad or truncate the signal to the model's expected input size (2048)
             if len(noisy_signal_np) != 2048:
                 st.warning(f"⚠️ Input signal has {len(noisy_signal_np)} samples, but the model expects 2048. Signal will be padded/truncated.", icon="⚠️")
                 final_signal = np.zeros(2048)
@@ -235,7 +245,7 @@ with tab3:
     st.header("Generalization: Proving STPC on a Different Problem")
     st.markdown("To ensure STPC wasn't just for ECGs, I tested it on a completely different signal: noisy EEG data from a seizure patient. The plot below shows that the STPC model (green) perfectly reconstructs both the shape and the underlying dynamics (gradient) of the seizure spike, while the basic model (red) fails. This proves the framework is versatile and robust.")
     try:
-        st.image("results/eeg_gradient_preservation_plot.png", caption="STPC (green) preserves the sharp seizure spike's shape and gradient, proving its versatility.")
+        st.image("eeg_gradient_preservation_plot.png", caption="STPC (green) preserves the sharp seizure spike's shape and gradient, proving its versatility.")
     except FileNotFoundError:
         st.warning("EEG generalization plot ('eeg_gradient_preservation_plot.png') not found. Please run the EEG Colab notebook and save the plot to the project's root directory.")
 
@@ -255,4 +265,4 @@ with tab4:
         """
     )
     st.link_button("View on GitHub", "https://github.com/Mohan-CAS-and-hackathons/ecg-denoiser-hackathon")
-    st.link_button("Read the Full Research Paper", "https://github.com/Mohan-CAS-and-hackathons/ecg-denoiser-hackathon/blob/main/RESEARCH_PAPER.md")
+    st.link_button("Read the Full Research Paper", "https://github.com/Mohan-CAS-and-hackathons/ecg-denoiser-hackathon/blob/main/STPC_Research_Paper.pdf")
