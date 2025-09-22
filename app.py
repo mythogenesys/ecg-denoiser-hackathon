@@ -3,17 +3,20 @@ import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
 import plotly.graph_objects as go
-import time
 from PIL import Image
 import torch
+from collections import Counter
+import os
 
-# Import our inference tools
-from src.inference import load_model, denoise_ecg_signal, DEVICE
+# --- Import our project's source code ---
+from src.inference import denoise_ecg_signal, DEVICE
 from src.data_utils import TARGET_FS
+from src.classifier_model import ECGClassifier
+from src.model import UNet1D
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Physics-Aware ECG Denoiser",
+    page_title="STPC: AI for Reliable Cardiac Diagnostics",
     page_icon="❤️",
     layout="wide",
 )
@@ -21,40 +24,52 @@ st.set_page_config(
 # --- Model Loading ---
 @st.cache_resource
 def get_models():
-    """Load and cache both models."""
-    denoiser = load_model('models/ecg_denoiser_model.pth', DEVICE)
-    classifier = None # Placeholder for the classifier model
-    # Add try-except for robustness in case the file is missing
+    """Load and cache the best denoiser and the classifier."""
+    denoiser = None
+    classifier = None
     try:
-        from src.classifier_model import ECGClassifier
-        classifier_model = ECGClassifier(num_classes=5)
-        classifier_model.load_state_dict(torch.load('models/ecg_classifier_model.pth', map_location=DEVICE))
-        classifier_model.to(DEVICE)
-        classifier_model.eval()
-        classifier = classifier_model
-        print("Classifier model loaded successfully.")
+        # Load the best-performing model: the full STPC denoiser
+        denoiser = UNet1D(in_channels=1, out_channels=1)
+        denoiser.load_state_dict(torch.load('models/denoiser_stpc_full.pth', map_location=DEVICE))
+        denoiser.to(DEVICE)
+        denoiser.eval()
+        
+        classifier = ECGClassifier(num_classes=5)
+        classifier.load_state_dict(torch.load('models/ecg_classifier_model.pth', map_location=DEVICE))
+        classifier.to(DEVICE)
+        classifier.eval()
+        print("✅ Classifier and Denoiser models loaded successfully.")
+    except FileNotFoundError as e:
+        st.error(f"Fatal Error: A required model file is missing: {e.filename}. Please ensure 'models/denoiser_stpc_full.pth' and 'models/ecg_classifier_model.pth' exist.")
     except Exception as e:
-        print(f"Could not load classifier model: {e}")
+        st.error(f"An unexpected error occurred while loading models: {e}")
+        
     return denoiser, classifier
 
 denoiser_model, classifier_model = get_models()
 
-# --- Analysis & Plotting (Keep these functions as they are) ---
+# --- Analysis & Plotting Functions ---
 def analyze_ecg(signal, fs):
     """Calculate heart rate and rhythm status from R-peaks."""
-    peaks, _ = find_peaks(signal, height=np.mean(signal) + np.std(signal), distance=fs*0.4)
-    if len(peaks) < 2: return "N/A", "N/A", peaks
-    rr_intervals = np.diff(peaks) / fs
-    heart_rate = 60 / np.mean(rr_intervals)
-    cov = np.std(rr_intervals) / np.mean(rr_intervals)
-    rhythm_status = "Regular" if cov < 0.15 else "Irregular"
-    return f"{heart_rate:.1f} bpm", rhythm_status, peaks
+    try:
+        # A more robust peak detection threshold
+        peaks, _ = find_peaks(signal, height=np.mean(signal) + 0.75 * np.std(signal), distance=fs * 0.4)
+        if len(peaks) < 2: return "N/A", "N/A", peaks
+        rr_intervals = np.diff(peaks) / fs
+        heart_rate = 60 / np.mean(rr_intervals)
+        # Coefficient of variation for rhythm assessment
+        cov = np.std(rr_intervals) / np.mean(rr_intervals)
+        rhythm_status = "Regular" if cov < 0.15 else "Irregular"
+        return f"{heart_rate:.1f} bpm", rhythm_status, peaks
+    except Exception:
+        return "N/A", "N/A", []
 
 def classify_beats(signal, peaks, classifier, fs, window_size=128):
     """Classify each detected heartbeat."""
     if classifier is None or len(peaks) == 0:
         return {}
     
+    # Simplified beat types for clarity in the demo
     beat_types = {0: 'Normal', 1: 'SVEB', 2: 'VEB', 3: 'Fusion', 4: 'Unknown'}
     predictions = []
     
@@ -67,83 +82,70 @@ def classify_beats(signal, peaks, classifier, fs, window_size=128):
                 pred_label = torch.argmax(classifier(tensor_in), dim=1).item()
                 predictions.append(beat_types.get(pred_label, 'Unknown'))
     
-    # Return a count of each beat type found
-    from collections import Counter
     return Counter(predictions)
 
 def create_ecg_plot(signal, peaks, title, fs):
     """Create an interactive Plotly chart for the ECG signal."""
     time_axis = np.arange(len(signal)) / fs
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=time_axis, y=signal, mode='lines', name='ECG Signal', line=dict(color='royalblue')))
-    fig.add_trace(go.Scatter(x=time_axis[peaks], y=signal[peaks], mode='markers', name='R-peaks', marker=dict(color='red', size=8, symbol='x')))
-    fig.update_layout(title=title, xaxis_title="Time (s)", yaxis_title="Amplitude (mV)", hovermode="x unified")
+    fig.add_trace(go.Scatter(x=time_axis, y=signal, mode='lines', name='ECG', line=dict(color='royalblue')))
+    if len(peaks) > 0:
+        fig.add_trace(go.Scatter(x=time_axis[peaks], y=signal[peaks], mode='markers', name='R-peaks', marker=dict(color='red', size=8, symbol='x')))
+    fig.update_layout(title_text=title, xaxis_title="Time (s)", yaxis_title="Amplitude", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     return fig
 
 # --- Main App UI ---
-st.title("❤️ Physics-Aware ECG Denoiser & Diagnostic Tool")
-st.markdown("An end-to-end AI pipeline to clean noisy ECG signals and provide diagnostic insights, designed for accessibility in rural healthcare.")
+st.title("❤️ STPC: From Noise to Diagnosis")
+st.subheader("An AI Framework for Reliable Cardiac Monitoring, Anywhere.")
 
 # --- TABS ---
-tab1, tab2, tab3, tab4 = st.tabs(["🚀 Live Demo", "🔬 The Problem & Our Solution", "📈 Validation Results", "💻 The Technology"])
+tab1, tab2, tab3, tab4 = st.tabs(["**🚀 Live Demo**", "**🔬 The Problem & My Solution**", "**📈 Validation Results**", "**💻 The Technology**"])
 
 # --- TAB 1: Live Demo ---
 with tab1:
-    st.header("Transform Your Noisy ECG in Seconds")
+    st.header("Transform a Noisy ECG into a Confident Diagnosis")
 
     with st.sidebar:
-        st.image("assets/header_image.png", use_container_width=True) # A nice header image
+        st.image("assets/header_image.png", use_container_width=True)
         st.title("Get Started")
         st.markdown(
             """
-            1.  **Download the sample file** to see the app in action.
-            2.  **Upload the sample file** (or your own single-column CSV ECG file).
-            3.  Review the AI-powered denoising and automated diagnosis.
+            1.  **Download the sample file** to see the app in action with a challenging, real-world signal.
+            2.  **Upload the sample file** (or your own single-column CSV).
+            3.  Review the AI-powered denoising and corrected automated diagnosis.
             """
         )
-        
-        try:
-            with open("samples/sample_noisy_ecg.csv", "rb") as file:
-                st.download_button(
-                    label="Download Sample ECG (.csv)",
-                    data=file,
-                    file_name="sample_noisy_ecg.csv",
-                    mime="text/csv"
-                )
-        except FileNotFoundError:
-            st.error("Sample file not found on server.")
-
+        # Robust check for the sample file
+        sample_file_path = "samples/sample_noisy_ecg.csv"
+        if os.path.exists(sample_file_path):
+            with open(sample_file_path, "rb") as file:
+                st.download_button(label="Download Sample ECG (.csv)", data=file, file_name="sample_noisy_ecg.csv", mime="text/csv")
+        else:
+            st.error("Sample file not found. Please run `python -m src.create_sample` from your terminal.")
         st.markdown("---")
         uploaded_file = st.file_uploader("Upload your noisy ECG file", type=["csv", "txt"])
     
-    # Main panel for displaying results
     if uploaded_file is not None:
         try:
-            df = pd.read_csv(uploaded_file, header=None)
-            noisy_signal_np = df[0].to_numpy()
-        except Exception as e:
-            st.error(f"Error reading file: {e}")
-            noisy_signal_np = None
-        
-        if noisy_signal_np is not None:
-            if len(noisy_signal_np) != 2048:
-                st.warning(f"⚠️ Input signal has {len(noisy_signal_np)} samples, but the model is optimized for 2048. The signal will be padded or truncated.", icon="⚠️")
-                padded_signal = np.zeros(2048)
-                if len(noisy_signal_np) < 2048:
-                    padded_signal[:len(noisy_signal_np)] = noisy_signal_np
-                else:
-                    padded_signal = noisy_signal_np[:2048]
-                noisy_signal_np = padded_signal
-
-            st.subheader("Denoising and Analysis in Progress...")
+            noisy_signal_np = pd.read_csv(uploaded_file, header=None)[0].to_numpy()
             
-            with st.spinner('AI is cleaning the signal...'):
+            # Pad or truncate to the model's required input size (2048)
+            if len(noisy_signal_np) != 2048:
+                st.warning(f"⚠️ Input signal has {len(noisy_signal_np)} samples, but the model expects 2048. Signal will be padded/truncated.", icon="⚠️")
+                final_signal = np.zeros(2048)
+                len_to_copy = min(len(noisy_signal_np), 2048)
+                final_signal[:len_to_copy] = noisy_signal_np[:len_to_copy]
+                noisy_signal_np = final_signal
+
+            st.subheader("Processing...")
+            
+            with st.spinner('AI is cleaning the signal using the STPC framework...'):
                 denoised_signal_np = denoise_ecg_signal(noisy_signal_np, denoiser_model)
             
             hr_noisy, rhythm_noisy, peaks_noisy = analyze_ecg(noisy_signal_np, TARGET_FS)
             hr_denoised, rhythm_denoised, peaks_denoised = analyze_ecg(denoised_signal_np, TARGET_FS)
             
-            with st.spinner('AI is classifying heartbeats...'):
+            with st.spinner('AI is classifying individual heartbeats...'):
                 beat_counts = classify_beats(denoised_signal_np, peaks_denoised, classifier_model, TARGET_FS)
 
             st.success("Processing Complete!", icon="✅")
@@ -161,92 +163,96 @@ with tab1:
                 st.metric("Rhythm", rhythm_denoised)
                 if beat_counts:
                     st.markdown("**Detected Beat Types:**")
-                    st.json(beat_counts)
-                st.plotly_chart(create_ecg_plot(denoised_signal_np, peaks_denoised, "AI Denoised ECG", TARGET_FS), use_container_width=True)
+                    st.json(dict(beat_counts))
+                st.plotly_chart(create_ecg_plot(denoised_signal_np, peaks_denoised, "AI Denoised ECG (STPC Model)", TARGET_FS), use_container_width=True)
+        except Exception as e:
+            st.error(f"An error occurred during processing. Please ensure the uploaded file is a single-column CSV. Error: {e}")
     else:
-        st.info("Upload an ECG file or download and upload the sample to begin.")
+        st.info("⬆️ Upload a noisy ECG file or use the sample to begin analysis.")
 
-# --- TAB 2: The Problem & Our Solution ---
+# --- TAB 2: The Problem & My Solution ---
 with tab2:
-    st.header("The Challenge: Unreliable Data in Critical Settings")
+    st.header("The Problem: Data We Can't Trust")
     st.markdown(
         """
-        Modern electrocardiograms (ECGs) are vital for detecting cardiac issues, but their effectiveness hinges on signal quality. In many real-world settings, especially in under-resourced or rural areas, clinicians rely on low-cost, portable ECG devices. While accessible, these devices are highly susceptible to noise from muscle tremors, electrode motion, and baseline wander.
-
-        **This is not a minor inconvenience; it's a critical diagnostic barrier.**
-        - Research has shown that automated systems can miss up to **30% of acute heart attacks (STEMIs)** when the ECG signal is poor.
-        - Field studies have uncovered significant rates of **undiagnosed atrial fibrillation (8% in one study)**, a condition easily detectable with a clean ECG but often hidden by noise.
-
-        A noisy signal can lead to a missed diagnosis or a false alarm, both of which have serious consequences.
+        AI-driven healthcare promises a revolution in diagnostics, but it has a critical weakness: **it's only as good as the data it's fed.** In many real-world settings, crucial data is corrupted by noise, leading to diagnostic errors.
+        
+        This is especially true for cardiac care:
+        - **Wearable Technology (e.g., Smartwatches):** Noise from daily activities can mask conditions like **Atrial Fibrillation**, a leading cause of stroke.
+        - **Rural & Emergency Medicine:** In clinics with portable ECGs or in ambulances, patient movement can render a signal unreadable, delaying diagnosis of a **heart attack** when every minute counts.
+        - **Intensive Care Units (ICUs):** Constant interference can cause **alarm fatigue**, where staff begin to ignore alerts, potentially missing a real crisis.
         """
     )
 
-    st.header("Our Solution: A Physics-Aware AI Pipeline")
+    st.header("My Solution: The STPC Framework")
     st.markdown(
         """
-        To address this, I built a novel end-to-end deep learning pipeline that doesn't just "clean" the signal, but does so in a way that respects the underlying physics of the heart.
+        To solve this "garbage-in, garbage-out" problem, I developed a novel AI training framework: **STPC (Spectral-Temporal Physiological Consistency)**. Instead of just teaching an AI to remove noise, I taught it the **physics of a real heartbeat.**
 
-        **1. The Denoiser:**
-        A **1D U-Net** architecture takes the noisy signal and reconstructs a clean version. What makes it unique is our custom **physics-informed loss function**, which teaches the model not just to remove noise, but to preserve the essential diagnostic features of a real heartbeat:
-        - **Gradient Loss:** Enforces the sharp, high-velocity spikes of the QRS complex.
-        - **FFT Loss:** Ensures the output has a realistic frequency profile, matching the harmonic signature of a true ECG.
+        My framework forces a **1D U-Net** model to preserve three essential properties of a real ECG:
+        - **1. Amplitude Consistency:** The basic voltage levels must be correct.
+        - **2. Temporal-Gradient Consistency:** A custom **gradient loss** preserves the sharp, high-velocity spikes of a heartbeat, preventing dangerous oversmoothing.
+        - **3. Spectral-Magnitude Consistency:** An **FFT-based loss** ensures the output has a realistic frequency profile, matching the harmonic signature of a true ECG.
 
-        **2. The Classifier:**
-        A lightweight **1D Convolutional Neural Network (CNN)** takes the clean, denoised signal and performs beat-by-beat classification, identifying potential arrhythmias according to the AAMI standard.
-
-        This two-stage approach ensures that the diagnostic model receives the highest quality data, dramatically improving its accuracy and reliability.
+        This approach produces a signal that is not just clean, but **trustworthy and physiologically faithful**, bridging the gap between noisy data and confident clinical decisions.
         """
     )
 
 # --- TAB 3: Validation Results ---
 with tab3:
-    st.header("Proof of Impact: A Real-World Simulation")
+    st.header("Proof of Impact: An End-to-End Validation")
     st.markdown(
         """
-        To prove our system works, Iconducted a rigorous test. Itook a patient record from the MIT-BIH database that the AI had **never seen during training**. Ithen digitally added a severe level of noise to simulate a worst-case, low-quality recording (0 dB SNR). Finally, Iran this challenging signal through our full pipeline and measured the diagnostic accuracy.
+        To prove that STPC works, I conducted a rigorous ablation study. I trained three different denoiser models: a basic L1 model, one with an added gradient loss, and my full STPC model. I then tested them on an unseen patient record to measure how their denoising affected the accuracy of a separate diagnostic AI.
         """
     )
-    st.subheader("The Results: From Chaos to Clarity")
-    st.markdown("The improvement in diagnostic accuracy is dramatic. Imeasured the F1-score, a key metric for classification performance:")
+    st.subheader("Quantitative Results: STPC Leads to Better Diagnoses")
+    st.markdown("The F1-score measures classification accuracy. The results below show that the **Full STPC model performed the best**, especially on the more challenging arrhythmia types ('L' and 'R' beats).")
     
     result_data = {
-        'Metric': ['Overall Accuracy', 'F1-Score (Ventricular Beats)', 'F1-Score (Supraventricular Beats)'],
-        'On Noisy Signal': ['90.0%', '0.80', '0.34'],
-        'On Denoised Signal (Our Tool)': ['96.0%', '**0.97**', '**0.67**']
+        'Model Configuration': ['L1 Only', 'L1 + Gradient', 'Full STPC (My Model)'],
+        "F1-Score (Arrhythmia 'L')": ['0.73', '0.71', '**0.74**'],
+        "F1-Score (Arrhythmia 'R')": ['0.98', '0.98', '**0.99**'],
+        'Overall Accuracy': ['0.97', '0.97', '0.97']
     }
-    st.table(pd.DataFrame(result_data))
+    st.table(pd.DataFrame(result_data).set_index('Model Configuration'))
     
-    st.markdown(
-        """
-        **Key Takeaway:** Our denoising step increased the F1-score for detecting critical **Ventricular arrhythmias from 0.80 to 0.97** and nearly doubled the score for Supraventricular arrhythmias.
-        """
-    )
-
-    st.subheader("Visualizing the Improvement: Confusion Matrices")
-    st.markdown("A confusion matrix shows what a model predicted vs. the actual truth. A perfect model has a bright line from the top-left to the bottom-right. Notice how the 'Denoised' matrix is significantly cleaner and more accurate than the 'Noisy' one.")
+    st.subheader("Visual Comparison: Confusion Matrices")
+    st.markdown("A perfect diagonal line means perfect accuracy. Notice how the STPC matrix on the right is the 'cleanest', with the fewest misclassifications for the difficult 'L' and 'R' beats.")
     
     try:
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
-            st.image(Image.open('results/confusion_matrix_noisy.png'), caption="Confusion Matrix on Noisy Data")
+            st.image(Image.open('results/l1_only_confusion_matrix_denoised.png'), caption="L1 Only Model")
         with col2:
-            st.image(Image.open('results/confusion_matrix_denoised.png'), caption="Confusion Matrix on Denoised Data")
+            st.image(Image.open('results/l1_grad_confusion_matrix_denoised.png'), caption="L1 + Gradient Model")
+        with col3:
+            st.image(Image.open('results/stpc_full_confusion_matrix_denoised.png'), caption="Full STPC Model (Best)")
     except FileNotFoundError:
-        st.warning("Validation images not found. Please run 'src/validate_end_to_end.py' to generate them.")
+        st.warning("Validation images not found. Please run the full Colab notebook to generate all result files.")
+
+    st.markdown("---")
+    st.header("Generalization: Proving STPC on a Different Problem")
+    st.markdown("To ensure STPC wasn't just for ECGs, I tested it on a completely different signal: noisy EEG data from a seizure patient. The plot below shows that the STPC model (green) perfectly reconstructs both the shape and the underlying dynamics (gradient) of the seizure spike, while the basic model (red) fails. This proves the framework is versatile and robust.")
+    try:
+        st.image("results/eeg_gradient_preservation_plot.png", caption="STPC (green) preserves the sharp seizure spike's shape and gradient, proving its versatility.")
+    except FileNotFoundError:
+        st.warning("EEG generalization plot ('eeg_gradient_preservation_plot.png') not found. Please run the EEG Colab notebook and save the plot to the project's root directory.")
 
 # --- TAB 4: The Technology ---
 with tab4:
-    st.header("Built with Open-Source Tools")
+    st.header("A Modern, Open-Source Stack")
     st.markdown(
         """
-        This project was built entirely with free, open-source tools, ensuring its accessibility and reproducibility.
+        I built this project entirely with free, open-source tools to ensure its accessibility and reproducibility.
 
-        - **Backend & Modeling:** Python, PyTorch, Scikit-learn, NumPy, SciPy
+        - **AI & Machine Learning:** Python, PyTorch, Scikit-learn, NumPy, SciPy
         - **Data Source:** PhysioNet (MIT-BIH Arrhythmia & Noise Stress Test Databases)
-        - **Frontend:** Streamlit
-        - **Training Environment:** Google Colab (leveraging free T4 GPUs)
+        - **Web Application:** Streamlit
+        - **Training & Experiments:** Google Colab (leveraging free T4 GPUs)
 
-        The complete source code, including training and validation scripts, is available on our GitHub repository.
+        The complete source code, including the training notebooks and the full research paper detailing the STPC framework, is available on GitHub.
         """
     )
     st.link_button("View on GitHub", "https://github.com/Mohan-CAS-and-hackathons/ecg-denoiser-hackathon")
+    st.link_button("Read the Full Research Paper", "https://github.com/Mohan-CAS-and-hackathons/ecg-denoiser-hackathon/blob/main/RESEARCH_PAPER.md")
